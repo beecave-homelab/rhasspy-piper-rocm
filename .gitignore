@@ -1,0 +1,21 @@
+# Ignore everything by default
+*
+
+# Allow specific project files
+!.gitignore
+!Dockerfile
+!docker-compose.yaml
+!entrypoint.sh
+!patch_piper.sh
+!requirements.txt
+!requirements-rocm.txt
+!run_container.sh
+!test_tts.sh
+!README.md
+
+# Allow models directory but ignore its contents
+!models/
+models/*
+
+# Don't ignore .gitkeep in models directory
+!models/.gitkeep 
