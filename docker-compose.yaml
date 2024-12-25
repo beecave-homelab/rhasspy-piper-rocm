@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  piper-tts-rocm:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: piper-tts-rocm
+    restart: unless-stopped
+    ports:
+      - "8501:8501"
+    volumes:
+      # - .:/app 
+      - ./models:/app/models
+    environment:
+      - PYTHONUNBUFFERED=1
+      - HSA_OVERRIDE_GFX_VERSION=10.3.0
+    devices:
+      - "/dev/kfd:/dev/kfd"
+      - "/dev/dri:/dev/dri"
+    stdin_open: true
+    tty: true
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - seccomp=unconfined
+    group_add:
+      - video
+    ipc: host
+    shm_size: 8G
+    command: ["bash", "", "/dev/null"] 
