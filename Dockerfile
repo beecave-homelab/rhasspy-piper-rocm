@@ -33,7 +33,9 @@ COPY --from=rocm-base /opt/rocm /opt/rocm
 
 # Install additional dependencies for Piper TTS
 RUN apt-get update -y && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-    python3 python3-pip python3-venv libstdc++-12-dev libffi-dev zlib1g-dev libssl-dev alsa-utils \
+    python3 python3-pip python3-venv \
+    libstdc++-12-dev libffi-dev zlib1g-dev libssl-dev alsa-utils \
+    wget \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
