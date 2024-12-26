@@ -9,6 +9,7 @@
 !patch_piper.sh
 !requirements.txt
 !requirements-rocm.txt
+!install_onnxruntime.sh
 !run_container.sh
 !test_tts.sh
 !README.md
@@ -16,6 +17,10 @@
 # Allow models directory but ignore its contents
 !models/
 models/*
-
-# Don't ignore .gitkeep in models directory
-!models/.gitkeep 
+!models/.gitkeep
+!output/
+output/*
+!output/.gitkeep
+!patch/
+patch/*
+!patch/voice.py
