@@ -6,7 +6,6 @@
 !Dockerfile
 !docker-compose.yaml
 !entrypoint.sh
-!patch_piper.sh
 !requirements.txt
 !requirements-rocm.txt
 !install_onnxruntime.sh
