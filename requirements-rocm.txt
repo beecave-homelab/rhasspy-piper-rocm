@@ -1,1 +1,8 @@
-https://repo.radeon.com/rocm/manylinux/rocm-rel-6.1.3/onnxruntime_rocm-1.17.0-cp310-cp310-linux_x86_64.whl
+#--pre
+# --index-url https://download.pytorch.org/whl/nightly/rocm6.1/
+# torch 
+# torchvision
+#--index-url https://repo.radeon.com/rocm/manylinux/rocm-rel-6.1.3/
+# torch
+https://repo.radeon.com/rocm/manylinux/rocm-rel-6.1.3/torch-2.1.2%2Brocm6.1.3-cp310-cp310-linux_x86_64.whl
+https://repo.radeon.com/rocm/manylinux/rocm-rel-6.1.3/pytorch_triton_rocm-2.1.0%2Brocm6.1.3.4d510c3a44-cp310-cp310-linux_x86_64.whl
