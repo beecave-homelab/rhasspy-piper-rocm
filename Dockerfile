@@ -32,14 +32,6 @@ ENV PATH="${PATH}:/opt/rocm/bin"
 ENV PATH=/root/.local/bin:/opt/amdgpu/bin:/opt/rocm/bin:/opt/rocm/llvm/bin:/opt/rocm/libexec/amdsmi_cli:${PATH}
 ENV LD_LIBRARY_PATH=/opt/rocm/include:/opt/rocm/lib:${LD_LIBRARY_PATH}
 
-##########################################
-#### SETUP FINAL IMAGE WITH PIPER-TTS ####
-##########################################
-# FROM ubuntu:22.04 AS final
-
-# # Copy ROCm libraries and tools from the base stage
-# COPY --from=rocm-base /opt/rocm /opt/rocm
-
 # Install additional dependencies for Piper TTS
 RUN apt-get update -y && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     # System utilities and build tools
@@ -70,13 +62,6 @@ RUN apt-get update -y && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-
     llvm tk-dev \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
-# Add ROCm environment variables and libraries to path
-# ENV ROCM_PATH=/opt/rocm
-# ENV HSA_OVERRIDE_GFX_VERSION=10.3.0
-# ENV AMDGPU_TARGETS=gfx1030
-# ENV PATH="${PATH}:/opt/rocm/bin"
-# ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/opt/rocm/lib:/opt/rocm/lib64"
 
 # Create and activate a Python virtual environment
 WORKDIR /app
