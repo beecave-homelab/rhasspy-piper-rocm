@@ -3,7 +3,7 @@ import logging
 import wave
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable, List, Optional, Union
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
 import numpy as np
 import onnxruntime
@@ -18,7 +18,6 @@ _LOGGER = logging.getLogger(__name__)
 
 @dataclass
 class PiperVoice:
-    use_cuda = False
     session: onnxruntime.InferenceSession
     config: PiperConfig
 
@@ -27,6 +26,8 @@ class PiperVoice:
         model_path: Union[str, Path],
         config_path: Optional[Union[str, Path]] = None,
         use_cuda: bool = False,
+        use_rocm: bool = False,
+        use_migraphx: bool = False,
     ) -> "PiperVoice":
         """Load an ONNX model and config."""
         if config_path is None:
@@ -35,14 +36,55 @@ class PiperVoice:
         with open(config_path, "r", encoding="utf-8") as config_file:
             config_dict = json.load(config_file)
 
+        providers: List[Union[str, Tuple[str, Dict[str, Any]]]]
+        if use_cuda:
+            providers = [
+                (
+                    "CUDAExecutionProvider",
+                    {"cudnn_conv_algo_search": "HEURISTIC"},
+                )
+            ]
+        elif use_rocm:
+            """
+            To support ROCm-enabled GPUs via 'ROCMExecutionProvider' or 'MIGraphXExecutionProvider':
+            1. Install piper-tts
+            > pip install piper-tts
+            2. Uninstall onnxruntime
+            > pip uninstall onnxruntime
+            3. Install onnxruntime-rocm
+            > pip3 install https://repo.radeon.com/rocm/manylinux/rocm-rel-6.0.2/onnxruntime_rocm-inference-1.17.0-cp310-cp310-linux_x86_64.whl --no-cache-dir
+            Remarks: Wheel files that support different ROCm versions are available at: https://repo.radeon.com/rocm/manylinux
+
+            To verify:
+            > python3
+            $ import onnxruntime
+            $ onnxruntime.get_available_providers()
+            Output:
+            ```
+            ['MIGraphXExecutionProvider', 'ROCMExecutionProvider', 'CPUExecutionProvider']
+            ```
+
+            To accelerate with AMD GPUs:
+            > piper --migraphx
+
+            To accelerate with ROCm-enabled GPUs:
+            > piper --rocm
+
+            Remarks: Tested on Ubuntu 22.04.4 + Kernel 6.6.32 + ROCm 6.0.2
+            Setup notes are available at: https://github.com/eliranwong/MultiAMDGPU_AIDev_Ubuntu/tree/main
+            """
+            providers = ["ROCMExecutionProvider", "CPUExecutionProvider"]
+        elif use_migraphx:
+            providers = ["MIGraphXExecutionProvider", "CPUExecutionProvider"]
+        else:
+            providers = ["CPUExecutionProvider"]
+
         return PiperVoice(
             config=PiperConfig.from_dict(config_dict),
             session=onnxruntime.InferenceSession(
                 str(model_path),
                 sess_options=onnxruntime.SessionOptions(),
-                providers=["ROCMExecutionProvider"]
-                if not use_cuda
-                else ["CUDAExecutionProvider"],
+                providers=providers,
             ),
         )
 
@@ -154,25 +196,24 @@ class PiperVoice:
             dtype=np.float32,
         )
 
+        args = {
+            "input": phoneme_ids_array,
+            "input_lengths": phoneme_ids_lengths,
+            "scales": scales
+        }
+
+        if self.config.num_speakers <= 1:
+            speaker_id = None
+
         if (self.config.num_speakers > 1) and (speaker_id is None):
             # Default speaker
             speaker_id = 0
 
-        sid = None
-
         if speaker_id is not None:
             sid = np.array([speaker_id], dtype=np.int64)
+            args["sid"] = sid
 
         # Synthesize through Onnx
-        audio = self.session.run(
-            None,
-            {
-                "input": phoneme_ids_array,
-                "input_lengths": phoneme_ids_lengths,
-                "scales": scales,
-                "sid": sid,
-            },
-        )[0].squeeze((0, 1))
+        audio = self.session.run(None, args, )[0].squeeze((0, 1))
         audio = audio_float_to_int16(audio.squeeze())
-
         return audio.tobytes()
