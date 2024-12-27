@@ -23,3 +23,5 @@ output/*
 !patch/
 patch/*
 !patch/voice.py
+!patch/http_server.py
+!patch/__main__.py
