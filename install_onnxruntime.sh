@@ -23,7 +23,7 @@ if ! wget -q "${PACKAGE_URL}"; then
 fi
 
 echo "Installing ONNX Runtime ROCm package..."
-if ! pip install "${PACKAGE_NAME}"; then
+if ! pip install --no-cache-dir "${PACKAGE_NAME}"; then
     echo "Error: Failed to install ONNX Runtime package"
     rm -f "${PACKAGE_NAME}"  # Cleanup
     exit 1
