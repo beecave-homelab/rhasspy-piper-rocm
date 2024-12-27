@@ -63,19 +63,32 @@ RUN apt-get update -y && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Create and activate a Python virtual environment
+# Set the working directory
 WORKDIR /app
+
+# Create and activate a Python virtual environment
+COPY requirements.txt /app/
 RUN python3 -m venv venv && \
     . venv/bin/activate && \
     pip install --upgrade pip wheel&& \
-    pip install numpy==1.26.4 protobuf==4.25.3 piper-tts
+    pip install --no-cache-dir -r requirements.txt
 
 # Install ONNX Runtime ROCm
 COPY install_onnxruntime.sh /app/
 RUN /app/install_onnxruntime.sh
 
-# Overwrite the voice.py file in the piper-tts package location to use `MIGraphXExecutionProvider`
-COPY ./shared/voice.py /app/venv/lib/python3.10/site-packages/piper/voice.py
+# Install requirements.txt
+COPY requirements-rocm.txt /app/
+RUN pip install --no-cache-dir -r requirements-rocm.txt
+
+# Overwrite the voice.py file in the piper-tts package location to use `MIGraphXExecutionProvider and `ROCMExecutionProvider`
+COPY ./patch/voice.py /app/venv/lib/python3.10/site-packages/piper/voice.py
+
+# Overwrite the http_server.py file in the piper-tts package location to use `MIGraphXExecutionProvider and `ROCMExecutionProvider`
+COPY ./patch/http_server.py /app/venv/lib/python3.10/site-packages/piper/http_server.py
+
+# Overwrite the __main__.py file in the piper-tts package location to use `MIGraphXExecutionProvider and `ROCMExecutionProvider`
+COPY ./patch/__main__.py /app/venv/lib/python3.10/site-packages/piper/__main__.py
 
 # Set the working directory and copy entrypoint script
 WORKDIR /app
